@@ -36,6 +36,21 @@ class AdminPropertyTest extends TestCase
             ->assertOk();
     }
 
+    public function test_authenticated_user_can_open_property_form(): void
+    {
+        $user = User::factory()->create();
+        $property = Property::factory()->create(['title' => 'Imóvel para editar']);
+
+        $this->actingAs($user)
+            ->get(route('admin.properties.create'))
+            ->assertOk()
+            ->assertSee(__('Novo imóvel'));
+
+        $this->actingAs($user)
+            ->get(route('admin.properties.edit', $property))
+            ->assertOk();
+    }
+
     public function test_unauthenticated_api_write_returns_401(): void
     {
         $this->postJson('/api/properties', $this->propertyPayload())
