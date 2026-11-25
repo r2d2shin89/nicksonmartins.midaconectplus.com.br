@@ -36,7 +36,12 @@ trait HandlesPropertyPhotos
         }
 
         $filename = Str::random(40).'.'.$extension;
-        $uploadedFile->move($uploadDirectory, $filename);
+        $sourcePath = $uploadedFile->getRealPath() ?: $uploadedFile->getPathname();
+        $destinationPath = $uploadDirectory.DIRECTORY_SEPARATOR.$filename;
+
+        if (! is_string($sourcePath) || ! is_file($sourcePath) || ! @copy($sourcePath, $destinationPath)) {
+            throw new RuntimeException('Não foi possível salvar a imagem enviada.');
+        }
 
         return '/uploads/'.$filename;
     }

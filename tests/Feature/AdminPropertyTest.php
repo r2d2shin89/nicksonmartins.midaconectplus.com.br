@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\Property;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
 use Livewire\Livewire;
 use Tests\TestCase;
 
@@ -113,6 +114,31 @@ class AdminPropertyTest extends TestCase
             'city' => 'São Paulo',
             'status' => 'disponivel',
         ]);
+    }
+
+    public function test_livewire_property_form_stores_uploaded_photo(): void
+    {
+        $user = User::factory()->create();
+
+        $this->actingAs($user);
+
+        Livewire::test('pages::admin.property-form')
+            ->set('title', 'Imóvel com foto')
+            ->set('purpose', 'venda')
+            ->set('type', 'Apartamento')
+            ->set('price', 450000)
+            ->set('city', 'São Paulo')
+            ->set('newPhotos', [UploadedFile::fake()->image('foto.jpg')])
+            ->call('save')
+            ->assertRedirect(route('admin.properties.index'));
+
+        $property = Property::where('title', 'Imóvel com foto')->firstOrFail();
+        $photo = $property->photos[0] ?? null;
+
+        $this->assertNotNull($photo);
+        $this->assertFileExists(public_path(ltrim((string) $photo, '/')));
+
+        unlink(public_path(ltrim((string) $photo, '/')));
     }
 
     public function test_livewire_property_form_updates_property(): void
